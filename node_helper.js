@@ -48,6 +48,8 @@ module.exports = NodeHelper.create({
                 url: encodeURIComponent(mmLocation)
             };
         console.error(now.toString() + ' - BalenaWatcher: Heartbeat timeout. Frontend might have crashed. Setting Tohora to "' + mmLocation + '"');
-        axios.post(tohoraLocation, payload);
+        axios.post(tohoraLocation, payload).finally(function() {
+            this.scheduleRestart();
+        }.bind(this));
     }
 });

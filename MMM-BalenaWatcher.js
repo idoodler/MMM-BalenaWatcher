@@ -1,4 +1,4 @@
-Module.register("MMM-WatchDog",{
+Module.register("MMM-BalenaWatcher",{
 
     // Default module config.
     defaults: {
@@ -18,10 +18,9 @@ Module.register("MMM-WatchDog",{
 
     // Start the interval to send the PING message.
     startHeartbeat: function() {
-        var self = this;
         setInterval(function() {
-            self.sendSocketNotification('PING', this.config);
-        }, this.config.interval * 1000);
+            this.sendSocketNotification('PING', this.config);
+        }.bind(this), this.config.interval * 1000);
     }
 
 });

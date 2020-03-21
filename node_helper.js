@@ -11,10 +11,19 @@ module.exports = NodeHelper.create({
     // be 1 seconds. The real default is set in MMM-BalenaWatcher.js
 
     config: {
-        timeout: 1
+        interval: 2,
+        timeout: 10,
+        tohora: {
+            host: "localhost",
+            port: 8080
+        }
     },
 
     // Handle incomming messages.
+
+    start: function start() {
+        this.scheduleRestart();
+    },
 
     socketNotificationReceived: function(notification, payload) {
 
@@ -40,10 +49,12 @@ module.exports = NodeHelper.create({
     // Quit Node process.
     restart: function() {
         var now = new Date(),
-            mmhost = global.configuration_file.address || "localhost",
-            mmPort = global.configuration_file.port || 80,
-            tohoraLocation = "http://" + this.config.tohora.host + ":" + this.config.tohora.port + "/launch/",
-            mmLocation = "http://" + mmhost + ":" + mmPort;
+            mmHost = global.config.address || "localhost",
+            mmPort = global.config.port || 80,
+            tohoraHost = this.config.hasOwnProperty("tohora") ? (this.config.tohora.host || mmHost) : mmHost,
+            tohoraPort = this.config.hasOwnProperty("tohora") ? (this.config.tohora.port || 8080) : 8080,
+            tohoraLocation = "http://" + tohoraHost + ":" + tohoraPort + "/launch/",
+            mmLocation = "http://" + mmHost + ":" + mmPort;
             payload = {
                 url: encodeURIComponent(mmLocation)
             };

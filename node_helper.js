@@ -11,18 +11,17 @@ module.exports = NodeHelper.create({
     // be 1 seconds. The real default is set in MMM-BalenaWatcher.js
 
     config: {
-        interval: 2,
-        timeout: 10,
+        interval: 20,
+        timeout: 30,
         tohora: {
             host: "localhost",
             port: 8080
         }
     },
 
-    // Handle incomming messages.
-
     start: function start() {
-        this.scheduleRestart();
+        console.log("MMM-BalenaWatcher", "Starting BalenaWatcher now");
+        setTimeout(this.scheduleRestart.bind(this, "init"), 5 * 1000);
     },
 
     socketNotificationReceived: function(notification, payload) {
@@ -30,24 +29,27 @@ module.exports = NodeHelper.create({
         // Incoming config. Store config and schedule restart.
         if (notification === 'SET_CONFIG') {
             this.config = payload;
-            this.scheduleRestart();
+            this.scheduleRestart("config");
             console.log("WatchDog started. Maximum timeout: " + this.config.timeout + "s.");
         }
 
         // Incoming PING. Reschedule restart.
         if (notification === 'PING') {
-            this.scheduleRestart();
+            this.scheduleRestart("ping");
         }
     },
 
     // Reschedule restart by clearing old timer, and setting a new timer.
-    scheduleRestart: function() {
+    scheduleRestart: function(reason) {
+        console.log("MMM-BalenaWatcher", "Starting restart timer (" + (this.config.timeout) + "s) reason='" + reason + "'");
         clearTimeout(this.timer);
-        this.timer = setTimeout(this.restart, this.config.timeout * 1000);
+        this.timer = setTimeout(this.restart.bind(this), this.config.timeout * 1000);
     },
 
     // Quit Node process.
     restart: function() {
+        clearTimeout(this.timer);
+        this.timer = null;
         var now = new Date(),
             mmHost = global.config.address || "localhost",
             mmPort = global.config.port || 80,
@@ -58,9 +60,9 @@ module.exports = NodeHelper.create({
             payload = {
                 url: encodeURIComponent(mmLocation)
             };
-        console.error(now.toString() + ' - BalenaWatcher: Heartbeat timeout. Frontend might have crashed. Setting Tohora to "' + mmLocation + '"');
+        console.warn(now.toString() + ' - MMM-BalenaWatcher: Heartbeat timeout. Frontend might have crashed. Setting Tohora to "' + mmLocation + '" with "' + tohoraLocation + '"');
         axios.post(tohoraLocation, payload).finally(function() {
-            this.scheduleRestart();
+            this.scheduleRestart("after set");
         }.bind(this));
     }
 });

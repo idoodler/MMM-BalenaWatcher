@@ -2,8 +2,8 @@ Module.register("MMM-BalenaWatcher",{
 
     // Default module config.
     defaults: {
-        interval: 2,
-        timeout: 10,
+        interval: 20,
+        timeout: 30,
         tohora: {
             host: "localhost",
             port: 8080
